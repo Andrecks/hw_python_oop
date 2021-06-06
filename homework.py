@@ -71,8 +71,8 @@ class CashCalculator(Calculator):
 
     def __init__(self, limit):
         super().__init__(limit)
-        self.USD_RATE = self.get_rate('usd')
-        self.EUR_RATE = self.get_rate('eur')
+        USD_RATE = self.get_rate('usd')
+        EURO_RATE = 70 # self.get_rate('eur')
 
     def get_week_stats(self) -> str:
         return ('За неделю было потрачено ',
@@ -89,8 +89,6 @@ class CashCalculator(Calculator):
         В случае если переданная валюта - рубль, то возвращаем курс = 1"""
         if (cur in ['rub', 'RUB', 'Руб', 'руб']):
             return 1
-        rate: str = ''
-        i = 0
         if cur == 'Euro':
             self.cur = 'EUR'
         else:
@@ -126,6 +124,7 @@ class CashCalculator(Calculator):
             return ('Денег нет, держись: твой долг - ',
                     f'{round(sum - n, 2)} {currency}')
 
+
 class CaloriesCalculator(Calculator):
     def __init__(self, limit):
         super().__init__(limit)
@@ -154,4 +153,3 @@ class Record:
         self.amount = amount
         self.date = date
         self.comment = comment
-        
