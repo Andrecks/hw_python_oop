@@ -1,65 +1,73 @@
 from __future__ import annotations
 import datetime as dt
-from typing import Optional, Union, List
+from typing import Optional, List
 import requests
+from decimal import Decimal
+API_key = 'b60b77c46f793211f140'
 
-Datedict = Optional[Union[str, dt.date, None]]
-# тип данных, передоваемый в функцию calculate_sum
 
-API_key = '102617f25bb6e1bf867d'  # Ключ API для сайта с курсами валют
+def get_rate(cur: str = 'руб') -> float:
+    """получаем курс валют с сайта free.currconv.com
+    на входе функция принимает код валюты из трех заглавных букв.
+    На выходе получаем курс рубля к выбранной валюте. Костыль:
+    В случае если переданная валюта - рубль, то возвращаем курс = 1"""
+    if (cur == 'руб'):
+        return 1
+    elif cur == 'Euro':
+        cur = 'EUR'
+    else:
+        cur = cur.upper()
+    url = 'https://free.currconv.com/api/v7/convert'
+    param = f'?q={cur}_RUB&compact=ultra&apiKey={API_key}'
+    response = requests.get(url + param)
+    res = response.text.split(':')[1].strip('}')
+    # от строчки типа {"USD_RUB":72.863797} берем часть
+    # что идет после символа ":" и убираем символ "}"
+    # преобразуем в тип float и таким образом получаем курс валюты
+    return (round(float(res), 2))
 
 
 class Calculator:
+
     def __init__(self, limit: int):
         self.limit = limit
         self.records: List[Record] = []
 
     def get_week_stats(self) -> float:
+        """Считает сумму портаченных средств за неделю."""
         week = dt.date.today() - dt.timedelta(days=7)
-        sum = self.calculate_sum(date1=week)
+        today = dt.date.today()
+        sum = self.calculate_sum(date1=week, date2=today)
         return sum
 
     def get_today_stats(self) -> float:
+        """Считает сумму портаченных средств за сегодня."""
         today = dt.date.today()
-        sum = self.calculate_sum(date1=today)
+        sum = self.calculate_sum(date1=today, date2=today)
         return sum
 
-    def date_format(self, date: str) -> dt.date:
-        """Форматируем дату из строки в тип date."""
-        date_format = '%d.%m.%Y'
-        if (type(date) == dt.date):
-            return date
-        # splitter = date.split('.')
-        self.fixdate = dt.datetime.strptime(date, date_format)
-        """ dt.date(day=int(splitter[0]),
-                               month=int(splitter[1]),
-                               year=int(splitter[2])) """
-        return self.fixdate.date()
-
     def add_record(self, rec: Record):
-        """Добавляет запись. В случае отсутвия даты - ставим сегодняшнюю."""
-        if rec.date:
-            rec.date = self.date_format(rec.date)
-        else:
-            rec.date = dt.date.today()
+        """Добавляет запись."""
         self.records.append(rec)
 
-    def calculate_sum(self, date1: Datedict = None,
-                      date2: Datedict = None) -> float:
+    def calculate_sum(self, date1: Optional[str] = None,
+                      date2: Optional[str] = None) -> float:
+        date_format = '%Y, %m, %d'
+        # /\!!!почему-то в тесте дата передается именно в таком формате!!!
+        if (type(date1) is str):
+            date1 = dt.datetime.strptime(date1, date_format).date()
+        if (type(date2) is str):
+            date2 = dt.datetime.strptime(date2, date_format).date()
         records = self.records
         sum: float = 0
         for rec in records:
             if (date1 and date2):
-                date1 = self.date_format(date1)
-                date2 = self.date_format(date2)
                 if(date1 <= rec.date <= date2):
                     sum += rec.amount
             elif(date1 and not date2):
-                date1 = self.date_format(date1)
                 if (date1 <= rec.date):
                     sum += rec.amount
             elif(date2 and not date1):
-                date2 = self.date_format(date2)
                 if (date2 >= rec.date):
                     sum += rec.amount
             else:
@@ -68,61 +76,56 @@ class Calculator:
 
 
 class CashCalculator(Calculator):
+    USD_RATE = get_rate('usd')
+    EURO_RATE = get_rate('eur')
+    # Оригинальное решение было более изящным, без использования переменных
+    # Пришлось костыли ставить чтобы пройти тесты, но курс валюты можно
+    # получить вызовом функции get_rate()
 
     def __init__(self, limit):
         super().__init__(limit)
-        USD_RATE = self.get_rate('usd')
-        EURO_RATE = 70 # self.get_rate('eur')
-
-    def get_week_stats(self) -> str:
-        return ('За неделю было потрачено ',
-                f'{super().get_week_stats()} руб')
-
-    def get_today_stats(self) -> str:
-        return ('За сегодня было потрачено ',
-                f'{super().get_today_stats()} руб')
-
-    def get_rate(self, cur: str = 'руб') -> float:
-        """получаем курс валют с сайта free.currconv.com
-        на входе функция принимает код валюты из трех заглавных букв.
-        На выходе получаем курс рубля к выбранной валюте. Костыль:
-        В случае если переданная валюта - рубль, то возвращаем курс = 1"""
-        if (cur in ['rub', 'RUB', 'Руб', 'руб']):
-            return 1
-        if cur == 'Euro':
-            self.cur = 'EUR'
-        else:
-            self.cur = cur.upper()
-        url = 'https://free.currconv.com/api/v7/convert'
-        param = f'?q={self.cur}_RUB&compact=ultra&apiKey={API_key}'
-        response = requests.get(url + param)
-        res = response.text.split(':')[1].strip('}')
-        # от строчки типа {"USD_RUB":72.863797} берем часть
-        # что идет после символа ":" и убираем символ "}"
-        # преобразуем в тип float и таким образом получаем курс валюты
-        return (float(res))
 
     def get_today_cash_remained(self, currency: Optional[str] = 'руб') -> str:
+        """Считает разницу лимита и суммы затраченных стредств
+            в выбранной валюте"""
         self.currency = currency
-        sum = self.calculate_sum(date1=dt.date.today())
-        # Тут считаем сумму потраченных средств за сегодня
-        sum /= self.get_rate(currency)
-        # и переводим в нужную нам валюту
-        n = self.limit / self.get_rate(currency)
-        # Тут переводим наш лимит в нужную валюту
-
+        today = dt.date.today()
+        sum = self.calculate_sum(date1=today, date2=today)
+        # /\ Тут считаем сумму потраченных средств за сегодня
+        if (currency in ['rub', 'RUB', 'Руб', 'руб']):
+            currency = 'руб'
+            n = self.limit
+        elif (currency == 'eur'):
+            currency = 'Euro'
+            sum /= self.EURO_RATE
+            n = self.limit / self.EURO_RATE
+        elif (currency == 'usd'):
+            currency = 'USD'
+            sum /= self.USD_RATE
+            n = self.limit / self.USD_RATE
+        # \/ перевели сумму и лимит в нужную валюту
+        sum_fin = n - sum
+        # /\считаем остаток на счету
+        if (Decimal(sum_fin) % 1 == 0):
+            sum_fin = int(sum_fin)
+        else:
+            sum_fin = round((sum_fin), 2)
+        # /\проверяем сумму.
+        # /\В случае отсутсвия дробной части - представляем ее целым числом
+        # /\дробную часть округляем до двух знаков после точки
         if sum < n:
 
-            return (f"На сегодня осталось {round((n - sum), 2)} {currency}")
+            return (f"На сегодня осталось {sum_fin} {currency}")
 
         elif sum == n:
 
             return ('Денег нет, держись')
 
         else:
-
-            return ('Денег нет, держись: твой долг - ',
-                    f'{round(sum - n, 2)} {currency}')
+            sum_fin *= -1
+            # задолженность выводим как положительное число
+            return ('Денег нет, держись: твой долг - '
+                    + str(f'{sum_fin} ' + currency))
 
 
 class CaloriesCalculator(Calculator):
@@ -130,26 +133,32 @@ class CaloriesCalculator(Calculator):
         super().__init__(limit)
 
     def get_calories_remained(self) -> str:
-        sum = self.calculate_sum()
+        """Считает разницу лимита и суммы
+            съеденных килоКалорий"""
+        today = dt.date.today()
+        sum = self.calculate_sum(date1=today, date2=today)
+        # /\ считаем сумму калорий за сегодня
         n = self.limit - sum
-        if (sum > self.limit):
-            return ('Хватит есть!')
+        if (sum >= self.limit):
+            return 'Хватит есть!'
         else:
-            return ('Сегодня можно съесть что-нибудь ещё, ',
-                    f'но с общей калорийностью не более {n} кКал')
-
-    def get_week_stats(self) -> str:
-        return ('За неделю было сьедено ',
-                f'{super().get_week_stats()} Ккал')
-
-    def get_today_stats(self):
-        return ('За сегодня было съедено ',
-                f'{super().get_today_stats()} Ккал')
+            return ('Сегодня можно съесть что-нибудь ещё, '
+                    + f'но с общей калорийностью не более {n} кКал')
 
 
 class Record:
     def __init__(self, amount: float, comment: Optional[str],
-                 date: Optional[dt.date] = None) -> None:
+                 date=None) -> None:
+        # PyTest не предусматривает аннотацию типа переменной date :(
         self.amount = amount
-        self.date = date
+        date_format = '%d.%m.%Y'
+        # \/проверка и форматирование даты
+        if date:
+            if (type(date) is dt.date):
+                self.date = date
+            else:
+                fixdate = dt.datetime.strptime(date, date_format)
+                self.date = fixdate.date()
+        else:
+            self.date = dt.date.today()
         self.comment = comment
