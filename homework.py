@@ -60,17 +60,8 @@ class Calculator:
         records = self.records
         sum: float = 0
         for rec in records:
-            if (date1 and date2):
                 if(date1 <= rec.date <= date2):
                     sum += rec.amount
-            elif(date1 and not date2):
-                if (date1 <= rec.date):
-                    sum += rec.amount
-            elif(date2 and not date1):
-                if (date2 >= rec.date):
-                    sum += rec.amount
-            else:
-                sum += rec.amount
         return sum
 
 
@@ -84,12 +75,14 @@ class CashCalculator(Calculator):
     def get_today_cash_remained(self, currency: Optional[str] = 'руб') -> str:
         """Считает разницу лимита и суммы затраченных стредств
             в выбранной валюте"""
-        cur_dict = {'USD': [self.USD_RATE, 'usd'],
-                    'EUR': [self.EURO_RATE, 'Euro'],
+        cur_dict = {'USD': [self.USD_RATE, 'USD', 'usd'],
+                    'EUR': [self.EURO_RATE, 'Euro', 'eur'],
                     'RUB': [1, 'руб', 'rub']}
-        # /\ Создаем словарь с курсами валют
-        # \/ ищем нужный курс и название валюты
+        # /\ создаем словарь с курсами валют
+        # \/ задаем параметры по умолчанию
         rate = 1
+        cur_name = currency
+        # \/ ищем нужный курс и название валюты
         for c, tup in cur_dict.items():
             if (currency in tup) or (c == currency):
                 rate = tup[0]
@@ -135,9 +128,8 @@ class CaloriesCalculator(Calculator):
         n = self.limit - sum
         if (sum >= self.limit):
             return 'Хватит есть!'
-        else:
-            return ('Сегодня можно съесть что-нибудь ещё, '
-                    + f'но с общей калорийностью не более {n} кКал')
+        return ('Сегодня можно съесть что-нибудь ещё, '
+                + f'но с общей калорийностью не более {n} кКал')
 
 
 class Record:
@@ -147,12 +139,9 @@ class Record:
         self.amount = amount
         date_format = '%d.%m.%Y'
         # \/проверка и форматирование даты
-        if date:
-            if (type(date) is dt.date):
-                self.date = date
-            else:
-                fixdate = dt.datetime.strptime(date, date_format)
-                self.date = fixdate.date()
-        else:
+        if (type(date) is None):
             self.date = dt.date.today()
+        else:
+            fixdate = dt.datetime.strptime(date, date_format)
+            self.date = fixdate.date()
         self.comment = comment
