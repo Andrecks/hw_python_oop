@@ -34,7 +34,7 @@ class Calculator:
 
     def get_week_stats(self) -> float:
         """Считает сумму портаченных средств за неделю."""
-        week = dt.date.today() - dt.timedelta(days=7)
+        week = dt.date.today() - dt.timedelta(hours=168)
         today = dt.date.today()
         sum = self.calculate_sum(date1=week, date2=today)
         return sum
@@ -51,12 +51,6 @@ class Calculator:
 
     def calculate_sum(self, date1: Optional[str] = None,
                       date2: Optional[str] = None) -> float:
-        date_format = '%Y, %m, %d'
-        # /\!!!почему-то в тесте дата передается именно в таком формате!!!
-        if (type(date1) is str):
-            date1 = dt.datetime.strptime(date1, date_format).date()
-        if (type(date2) is str):
-            date2 = dt.datetime.strptime(date2, date_format).date()
         records = self.records
         sum: float = 0
         for rec in records:
@@ -139,7 +133,7 @@ class Record:
         self.amount = amount
         date_format = '%d.%m.%Y'
         # \/проверка и форматирование даты
-        if (type(date) is None):
+        if (date is None):
             self.date = dt.date.today()
         else:
             fixdate = dt.datetime.strptime(date, date_format)
