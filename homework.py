@@ -89,6 +89,7 @@ class CashCalculator(Calculator):
                     'RUB': [1, 'руб', 'rub']}
         # /\ Создаем словарь с курсами валют
         # \/ ищем нужный курс и название валюты
+        rate = 1
         for c, tup in cur_dict.items():
             if (currency in tup) or (c == currency):
                 rate = tup[0]
