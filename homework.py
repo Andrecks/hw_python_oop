@@ -34,27 +34,26 @@ class Calculator:
 
     def get_week_stats(self) -> float:
         """Считает сумму портаченных средств за неделю."""
-        week = dt.date.today() - dt.timedelta(hours=168)
-        today = dt.date.today()
-        sum = self.calculate_sum(date1=week, date2=today)
+        week = dt.timedelta(days=7)
+        sum = self.calculate_sum(date=week)
         return sum
 
     def get_today_stats(self) -> float:
         """Считает сумму портаченных средств за сегодня."""
-        today = dt.date.today()
-        sum = self.calculate_sum(date1=today, date2=today)
+        today = dt.timedelta(hours=24 - dt.datetime.now().time().hour)
+        sum = self.calculate_sum(date=today)
         return sum
 
     def add_record(self, rec: Record):
         """Добавляет запись."""
         self.records.append(rec)
 
-    def calculate_sum(self, date1: Optional[str] = None,
-                      date2: Optional[str] = None) -> float:
+    def calculate_sum(self, date: Optional[dt.timedelta] = 0) -> float:
         records = self.records
         sum: float = 0
+        date_dif = dt.datetime.today() - date
         for rec in records:
-                if(date1 <= rec.date <= date2):
+                if(date_dif <= rec.date <= dt.date.today()):
                     sum += rec.amount
         return sum
 
