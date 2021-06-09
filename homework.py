@@ -51,7 +51,8 @@ class Calculator:
     def calculate_sum(self, date: Optional[dt.timedelta] = 0) -> float:
         records = self.records
         sum: float = 0
-        date_dif = dt.datetime.today() - date
+        date_dif = dt.date.today() - date
+        print(date_dif)
         for rec in records:
                 if(date_dif <= rec.date <= dt.date.today()):
                     sum += rec.amount
