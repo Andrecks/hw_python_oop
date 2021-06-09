@@ -19,12 +19,11 @@ def get_rate(cur: str = 'руб') -> float:
         cur = cur.upper()
     url = 'https://free.currconv.com/api/v7/convert'
     param = f'?q={cur}_RUB&compact=ultra&apiKey={API_key}'
-    response = requests.get(url + param)
-    res = response.text.split(':')[1].strip('}')
-    # от строчки типа {"USD_RUB":72.863797} берем часть
-    # что идет после символа ":" и убираем символ "}"
-    # преобразуем в тип float и таким образом получаем курс валюты
-    return (round(float(res), 2))
+    response = requests.get(url + param).json()
+    res = float(response[f'{cur}_RUB'])
+    # получаем json, выбираем нужное нам значение
+    # преобразуем в тип float окрунояем до двух знаков
+    return round(res, 2)
 
 
 class Calculator:
@@ -82,28 +81,23 @@ class CashCalculator(Calculator):
     # Пришлось костыли ставить чтобы пройти тесты, но курс валюты можно
     # получить вызовом функции get_rate()
 
-    def __init__(self, limit):
-        super().__init__(limit)
-
     def get_today_cash_remained(self, currency: Optional[str] = 'руб') -> str:
         """Считает разницу лимита и суммы затраченных стредств
             в выбранной валюте"""
-        self.currency = currency
-        today = dt.date.today()
-        sum = self.calculate_sum(date1=today, date2=today)
+        cur_dict = {'USD': [self.USD_RATE, 'usd'],
+                    'EUR': [self.EURO_RATE, 'Euro'],
+                    'RUB': [1, 'руб', 'rub']}
+        # /\ Создаем словарь с курсами валют
+        # \/ ищем нужный курс и название валюты
+        for c, tup in cur_dict.items():
+            if (currency in tup) or (c == currency):
+                rate = tup[0]
+                cur_name = tup[1]
+        sum = self.get_today_stats()
         # /\ Тут считаем сумму потраченных средств за сегодня
-        if (currency in ['rub', 'RUB', 'Руб', 'руб']):
-            currency = 'руб'
-            n = self.limit
-        elif (currency == 'eur'):
-            currency = 'Euro'
-            sum /= self.EURO_RATE
-            n = self.limit / self.EURO_RATE
-        elif (currency == 'usd'):
-            currency = 'USD'
-            sum /= self.USD_RATE
-            n = self.limit / self.USD_RATE
-        # \/ перевели сумму и лимит в нужную валюту
+        sum /= rate
+        n = self.limit / rate
+        # /\ перевели сумму и лимит в нужную валюту
         sum_fin = n - sum
         # /\считаем остаток на счету
         if (Decimal(sum_fin) % 1 == 0):
@@ -115,7 +109,7 @@ class CashCalculator(Calculator):
         # /\дробную часть округляем до двух знаков после точки
         if sum < n:
 
-            return (f"На сегодня осталось {sum_fin} {currency}")
+            return (f"На сегодня осталось {sum_fin} {cur_name}")
 
         elif sum == n:
 
@@ -125,7 +119,7 @@ class CashCalculator(Calculator):
             sum_fin *= -1
             # задолженность выводим как положительное число
             return ('Денег нет, держись: твой долг - '
-                    + str(f'{sum_fin} ' + currency))
+                    + str(f'{sum_fin} ' + cur_name))
 
 
 class CaloriesCalculator(Calculator):
@@ -135,8 +129,7 @@ class CaloriesCalculator(Calculator):
     def get_calories_remained(self) -> str:
         """Считает разницу лимита и суммы
             съеденных килоКалорий"""
-        today = dt.date.today()
-        sum = self.calculate_sum(date1=today, date2=today)
+        sum = self.get_today_stats()
         # /\ считаем сумму калорий за сегодня
         n = self.limit - sum
         if (sum >= self.limit):
