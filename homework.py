@@ -75,11 +75,10 @@ class CashCalculator(Calculator):
         # \/ задаем параметры по умолчанию
         rate = cur_dict[currency][0]
         cur_name = cur_dict[currency][1]
-        sum = self.get_today_stats() / rate
+        sum = self.get_today_stats()
         # /\ Тут считаем сумму потраченных средств за сегодня
         sum_fin = self.limit - sum
         sum_fin /= rate
-        self.limit /= rate
         # /\ перевели в нужную валюту
         if (Decimal(sum_fin) % 1 == 0):
             sum_fin = sum_fin
