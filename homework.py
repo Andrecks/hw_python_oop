@@ -6,17 +6,11 @@ from decimal import Decimal
 API_key = 'b60b77c46f793211f140'
 
 
-def get_rate(cur: str = 'руб') -> float:
+def get_rate(cur: str = 'RUB') -> float:
     """получаем курс валют с сайта free.currconv.com
     на входе функция принимает код валюты из трех заглавных букв.
     На выходе получаем курс рубля к выбранной валюте. Костыль:
     В случае если переданная валюта - рубль, то возвращаем курс = 1"""
-    if (cur == 'руб'):
-        return 1
-    elif cur == 'Euro':
-        cur = 'EUR'
-    else:
-        cur = cur.upper()
     url = 'https://free.currconv.com/api/v7/convert'
     param = f'?q={cur}_RUB&compact=ultra&apiKey={API_key}'
     response = requests.get(url + param).json()
@@ -59,8 +53,8 @@ class Calculator:
 
 
 class CashCalculator(Calculator):
-    USD_RATE = get_rate('usd')
-    EURO_RATE = get_rate('eur')
+    USD_RATE = get_rate('USD')
+    EURO_RATE = get_rate('EUR')
     # Оригинальное решение было более изящным, без использования переменных
     # Пришлось костыли ставить чтобы пройти тесты, но курс валюты можно
     # получить вызовом функции get_rate()
