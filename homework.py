@@ -35,26 +35,27 @@ class Calculator:
     def get_week_stats(self) -> float:
         """Считает сумму портаченных средств за неделю."""
         week = dt.timedelta(weeks=1)
-        sum = self.ca_sum(date=week)
+        sum = self.calculate_sum(date=week)
         return sum
 
     def get_today_stats(self) -> float:
         """Считает сумму портаченных средств за сегодня."""
         today = dt.timedelta(days=1)
-        sum = self.ca_sum(date=today)
+        sum = self.calculate_sum(date=today)
         return sum
 
     def add_record(self, rec: Record):
         """Добавляет запись."""
         self.records.append(rec)
 
-    def ca_sum(self, date: Optional[dt.timedelta] = dt.date.today()) -> float:
+    def calculate_sum(self, date: Optional[dt.timedelta]
+                      = dt.date.today()) -> float:
         today = dt.date.today()
         records = self.records
         date_dif = dt.date.today() - date
-        list: List[float]
-        list = [x.amount for x in records if (date_dif < x.date <= today)]
-        return sum(list)
+        sum_list: List[float]
+        sum_list = [x.amount for x in records if (date_dif < x.date <= today)]
+        return sum(sum_list)
 
 
 class CashCalculator(Calculator):
@@ -67,45 +68,41 @@ class CashCalculator(Calculator):
     def get_today_cash_remained(self, currency: Optional[str] = 'руб') -> str:
         """Считает разницу лимита и суммы затраченных стредств
             в выбранной валюте"""
-        cur_dict = {'USD': [self.USD_RATE, 'USD', 'usd'],
-                    'EUR': [self.EURO_RATE, 'Euro', 'eur'],
-                    'RUB': [1, 'руб', 'rub']}
+        cur_dict = {'usd': [self.USD_RATE, 'USD'],
+                    'eur': [self.EURO_RATE, 'Euro'],
+                    'rub': [1, 'руб']}
         # /\ создаем словарь с курсами валют
         # \/ задаем параметры по умолчанию
-        rate = 1
-        cur_name = currency
+        rate = cur_dict[currency][0]
+        cur_name = cur_dict[currency][1]
         # \/ ищем нужный курс и название валюты
-        for c, tup in cur_dict.items():
-            if (currency in tup) or (c == currency):
-                rate = tup[0]
-                cur_name = tup[1]
+        # for c, tup in cur_dict.items():
+            # if (currency in tup) or (c == currency):
+                # rate = tup[0]
+                # cur_name = tup[1]
         sum = self.get_today_stats()
         # /\ Тут считаем сумму потраченных средств за сегодня
-        sum /= rate
-        n = self.limit / rate
-        # /\ перевели сумму и лимит в нужную валюту
-        sum_fin = n - sum
-        # /\считаем остаток на счету
+        sum_fin = self.limit - sum
+        sum_fin /= rate
+        self.limit /= rate
+        # /\ перевели в нужную валюту
         if (Decimal(sum_fin) % 1 == 0):
-            sum_fin = int(sum_fin)
-        else:
-            sum_fin = round((sum_fin), 2)
+            sum_fin = sum_fin
         # /\проверяем сумму.
         # /\В случае отсутсвия дробной части - представляем ее целым числом
         # /\дробную часть округляем до двух знаков после точки
-        if sum < n:
+        if sum < self.limit:
 
-            return (f"На сегодня осталось {sum_fin} {cur_name}")
+            return (f"На сегодня осталось {sum_fin:.2f} {cur_name}")
 
-        elif sum == n:
+        elif sum == self.limit:
 
             return ('Денег нет, держись')
 
-        else:
-            sum_fin *= -1
-            # задолженность выводим как положительное число
-            return ('Денег нет, держись: твой долг - '
-                    + str(f'{sum_fin} ' + cur_name))
+        sum_fin = abs(sum_fin)
+        # задолженность выводим как положительное число
+        return ('Денег нет, держись: твой долг - '
+                + f'{sum_fin:.2f} ' + cur_name)
 
 
 class CaloriesCalculator(Calculator):
@@ -131,9 +128,27 @@ class Record:
         self.amount = amount
         date_format = '%d.%m.%Y'
         # \/проверка и форматирование даты
-        if (date is None):
+        if date is None:
             self.date = dt.date.today()
         else:
             fixdate = dt.datetime.strptime(date, date_format)
             self.date = fixdate.date()
         self.comment = comment
+
+# создадим калькулятор денег с дневным лимитом 1000
+cash_calculator = CashCalculator(10.10)
+
+# дата в параметрах не указана,
+# так что по умолчанию к записи
+# должна автоматически добавиться сегодняшняя дата
+cash_calculator.add_record(Record(amount=145, comment='кофе'))
+# и к этой записи тоже дата должна добавиться автоматически
+cash_calculator.add_record(Record(amount=300, comment='Серёге за обед'))
+# а тут пользователь указал дату, сохраняем её
+cash_calculator.add_record(Record(amount=3000,
+                                  comment='бар в Танин др',
+                                  date='08.11.2019'))
+
+print(cash_calculator.get_today_cash_remained('eur'))
+# должно напечататься
+# На сегодня осталось 555 руб 
