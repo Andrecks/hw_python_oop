@@ -75,12 +75,7 @@ class CashCalculator(Calculator):
         # \/ задаем параметры по умолчанию
         rate = cur_dict[currency][0]
         cur_name = cur_dict[currency][1]
-        # \/ ищем нужный курс и название валюты
-        # for c, tup in cur_dict.items():
-            # if (currency in tup) or (c == currency):
-                # rate = tup[0]
-                # cur_name = tup[1]
-        sum = self.get_today_stats()
+        sum = self.get_today_stats() / rate
         # /\ Тут считаем сумму потраченных средств за сегодня
         sum_fin = self.limit - sum
         sum_fin /= rate
@@ -134,21 +129,3 @@ class Record:
             fixdate = dt.datetime.strptime(date, date_format)
             self.date = fixdate.date()
         self.comment = comment
-
-# создадим калькулятор денег с дневным лимитом 1000
-cash_calculator = CashCalculator(10.10)
-
-# дата в параметрах не указана,
-# так что по умолчанию к записи
-# должна автоматически добавиться сегодняшняя дата
-cash_calculator.add_record(Record(amount=145, comment='кофе'))
-# и к этой записи тоже дата должна добавиться автоматически
-cash_calculator.add_record(Record(amount=300, comment='Серёге за обед'))
-# а тут пользователь указал дату, сохраняем её
-cash_calculator.add_record(Record(amount=3000,
-                                  comment='бар в Танин др',
-                                  date='08.11.2019'))
-
-print(cash_calculator.get_today_cash_remained('eur'))
-# должно напечататься
-# На сегодня осталось 555 руб 
