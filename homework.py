@@ -34,29 +34,27 @@ class Calculator:
 
     def get_week_stats(self) -> float:
         """Считает сумму портаченных средств за неделю."""
-        week = dt.timedelta(days=7)
-        sum = self.calculate_sum(date=week)
+        week = dt.timedelta(hours=168)
+        sum = self.ca_sum(date=week)
         return sum
 
     def get_today_stats(self) -> float:
         """Считает сумму портаченных средств за сегодня."""
         today = dt.timedelta(hours=24 - dt.datetime.now().time().hour)
-        sum = self.calculate_sum(date=today)
+        sum = self.ca_sum(date=today)
         return sum
 
     def add_record(self, rec: Record):
         """Добавляет запись."""
         self.records.append(rec)
 
-    def calculate_sum(self, date: Optional[dt.timedelta] = 0) -> float:
+    def ca_sum(self, date: Optional[dt.timedelta] = dt.date.today()) -> float:
+        today = dt.date.today()
         records = self.records
-        sum: float = 0
         date_dif = dt.date.today() - date
-        print(date_dif)
-        for rec in records:
-                if(date_dif <= rec.date <= dt.date.today()):
-                    sum += rec.amount
-        return sum
+        list: List[float]
+        list = [x.amount for x in records if (date_dif <= x.date <= today)]
+        return sum(list)
 
 
 class CashCalculator(Calculator):
@@ -139,3 +137,22 @@ class Record:
             fixdate = dt.datetime.strptime(date, date_format)
             self.date = fixdate.date()
         self.comment = comment
+# создадим калькулятор денег с дневным лимитом 1000
+cash_calculator = CashCalculator(1000)
+
+# дата в параметрах не указана,
+# так что по умолчанию к записи
+# должна автоматически добавиться сегодняшняя дата
+cash_calculator.add_record(Record(amount=145, comment='кофе'))
+# и к этой записи тоже дата должна добавиться автоматически
+cash_calculator.add_record(Record(amount=300, comment='Серёге за обед'))
+# а тут пользователь указал дату, сохраняем её
+cash_calculator.add_record(Record(amount=3000,
+                                  comment='бар в Танин др',
+                                  date='08.11.2019'))
+
+print(cash_calculator.get_today_cash_remained('rub'))
+cash_calculator.get_today_stats()
+cash_calculator.get_week_stats()
+# должно напечататься
+# На сегодня осталось 555 руб 
