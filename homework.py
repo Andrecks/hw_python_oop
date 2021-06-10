@@ -40,7 +40,7 @@ class Calculator:
 
     def get_today_stats(self) -> float:
         """Считает сумму портаченных средств за сегодня."""
-        today = dt.timedelta(hours=24 - dt.datetime.now().time().hour)
+        today = dt.timedelta(days=1)
         sum = self.ca_sum(date=today)
         return sum
 
