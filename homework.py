@@ -34,7 +34,7 @@ class Calculator:
 
     def get_week_stats(self) -> float:
         """Считает сумму портаченных средств за неделю."""
-        week = dt.timedelta(weeks=1)
+        week = dt.timedelta(days=6)
         sum = self.ca_sum(date=week)
         return sum
 
