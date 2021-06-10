@@ -34,7 +34,7 @@ class Calculator:
 
     def get_week_stats(self) -> float:
         """Считает сумму портаченных средств за неделю."""
-        week = dt.timedelta(days=6)
+        week = dt.timedelta(weeks=1)
         sum = self.ca_sum(date=week)
         return sum
 
@@ -53,7 +53,7 @@ class Calculator:
         records = self.records
         date_dif = dt.date.today() - date
         list: List[float]
-        list = [x.amount for x in records if (date_dif <= x.date <= today)]
+        list = [x.amount for x in records if (date_dif < x.date <= today)]
         return sum(list)
 
 
