@@ -14,7 +14,7 @@ API (условно) бесплатного ресурса https://www.currencyc
 Поменял логику вычисления суммы. 
 --v4--
 переименована переменная получения get-today_stats() в функции get_today_cash_remainesd()
-sum --> today_sum
+sum --> sum_today
 убрал бесполезный __init__ дочерних классов Calculator 
 
 P.S: На всякий случай запасной ключ API: '102617f25bb6e1bf867d'
