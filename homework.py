@@ -69,9 +69,9 @@ class CashCalculator(Calculator):
         # \/ задаем параметры по умолчанию
         rate = cur_dict[currency][0]
         cur_name = cur_dict[currency][1]
-        today_sum = self.get_today_stats()
+        sum_today = self.get_today_stats()
         # /\ Тут считаем сумму потраченных средств за сегодня
-        sum_fin = self.limit - today_sum
+        sum_fin = self.limit - sum_today
         sum_fin /= rate
         # /\ перевели в нужную валюту
         if (Decimal(sum_fin) % 1 == 0):
@@ -79,11 +79,11 @@ class CashCalculator(Calculator):
         # /\проверяем сумму.
         # /\В случае отсутсвия дробной части - представляем ее целым числом
         # /\дробную часть округляем до двух знаков после точки
-        if sum < self.limit:
+        if sum_today < self.limit:
 
             return (f"На сегодня осталось {sum_fin:.2f} {cur_name}")
 
-        elif sum == self.limit:
+        elif sum_today == self.limit:
 
             return ('Денег нет, держись')
 
