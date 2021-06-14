@@ -97,8 +97,8 @@ class CaloriesCalculator(Calculator):
             съеденных килоКалорий"""
         sum_today = self.get_today_stats()
         # /\ считаем сумму калорий за сегодня
-        n = self.limit - sum_today 
-        if (sum_today  >= self.limit):
+        n = self.limit - sum_today
+        if (sum_today >= self.limit):
             return 'Хватит есть!'
         return ('Сегодня можно съесть что-нибудь ещё, '
                 + f'но с общей калорийностью не более {n} кКал')
