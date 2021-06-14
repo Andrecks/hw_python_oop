@@ -29,14 +29,14 @@ class Calculator:
     def get_week_stats(self) -> float:
         """Считает сумму портаченных средств за неделю."""
         week = dt.timedelta(weeks=1)
-        sum = self.calculate_sum(date=week)
-        return sum
+        sum_week = self.calculate_sum(date=week)
+        return sum_week
 
     def get_today_stats(self) -> float:
         """Считает сумму портаченных средств за сегодня."""
         today = dt.timedelta(days=1)
-        sum = self.calculate_sum(date=today)
-        return sum
+        sum_today = self.calculate_sum(date=today)
+        return sum_today
 
     def add_record(self, rec: Record):
         """Добавляет запись."""
@@ -55,9 +55,6 @@ class Calculator:
 class CashCalculator(Calculator):
     USD_RATE = get_rate('USD')
     EURO_RATE = get_rate('EUR')
-    # Оригинальное решение было более изящным, без использования переменных
-    # Пришлось костыли ставить чтобы пройти тесты, но курс валюты можно
-    # получить вызовом функции get_rate()
 
     def get_today_cash_remained(self, currency: Optional[str] = 'руб') -> str:
         """Считает разницу лимита и суммы затраченных стредств
@@ -98,10 +95,10 @@ class CaloriesCalculator(Calculator):
     def get_calories_remained(self) -> str:
         """Считает разницу лимита и суммы
             съеденных килоКалорий"""
-        sum = self.get_today_stats()
+        sum_today = self.get_today_stats()
         # /\ считаем сумму калорий за сегодня
-        n = self.limit - sum
-        if (sum >= self.limit):
+        n = self.limit - sum_today 
+        if (sum_today  >= self.limit):
             return 'Хватит есть!'
         return ('Сегодня можно съесть что-нибудь ещё, '
                 + f'но с общей калорийностью не более {n} кКал')
